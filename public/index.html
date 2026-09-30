@@ -1084,7 +1084,19 @@ function detectDevice() {
   return 'Unknown';
 }
 
+function isBot() {
+  const ua = navigator.userAgent.toLowerCase();
+  const botPatterns = [
+    'headlesschrome', 'headless', 'bot', 'crawler', 'spider',
+    'lighthouse', 'pingdom', 'uptimerobot', 'netlify'
+  ];
+  return botPatterns.some(p => ua.includes(p));
+}
+
 async function logUserVisit() {
+  // Skip kalau bot
+  if (isBot()) return;
+
   try {
     const device = detectDevice();
     await fetch(USERS_API + '?action=log&device=' + encodeURIComponent(device), {
@@ -1092,6 +1104,8 @@ async function logUserVisit() {
     });
   } catch (e) {}
 }
+
+logUserVisit();
 
 // Log saat halaman dibuka
 logUserVisit();
