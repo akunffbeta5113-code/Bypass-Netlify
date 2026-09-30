@@ -1063,6 +1063,39 @@ if (document.readyState === 'loading') {
 setInterval(cekMaintenance, 15000);
 setInterval(cekBroadcast, 30000);
 setInterval(loadServiceStatus, 30000);
+
+// ==========================================
+// LOG USER MASUK
+// ==========================================
+const USERS_API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.io'))
+  ? 'https://bypass-proxy.vercel.app/api/users'
+  : '/api/users';
+
+function detectDevice() {
+  const ua = navigator.userAgent;
+  if (/android/i.test(ua)) {
+    if (/mobile/i.test(ua)) return 'Android Phone';
+    return 'Android Tablet';
+  }
+  if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+  if (/windows/i.test(ua)) return 'Windows';
+  if (/mac/i.test(ua)) return 'Mac';
+  if (/linux/i.test(ua)) return 'Linux';
+  return 'Unknown';
+}
+
+async function logUserVisit() {
+  try {
+    const device = detectDevice();
+    await fetch(USERS_API + '?action=log&device=' + encodeURIComponent(device), {
+      cache: 'no-store'
+    });
+  } catch (e) {}
+}
+
+// Log saat halaman dibuka
+logUserVisit();
+  
 // ==========================================
 // LIVE USER — REAL TIME
 // ==========================================
