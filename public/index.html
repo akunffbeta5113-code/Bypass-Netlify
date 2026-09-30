@@ -1140,8 +1140,12 @@ const LIVE_API = (location.hostname === 'localhost' || location.hostname === '12
   ? 'https://bypass-proxy.vercel.app/api/live'
   : '/api/live';
 
-// Session unik per tab
-const SESSION_ID = 's_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+// Session disimpan di sessionStorage — tetap sama selama tab dibuka
+let SESSION_ID = sessionStorage.getItem('sd_live_session');
+if (!SESSION_ID) {
+  SESSION_ID = 's_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+  sessionStorage.setItem('sd_live_session', SESSION_ID);
+}
 
 async function pingLive() {
   try {
