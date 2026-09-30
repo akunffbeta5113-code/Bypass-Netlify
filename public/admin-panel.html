@@ -926,14 +926,15 @@ async function loadUsers() {
       });
 
       html += `
-        <div class="user-item">
-          <div class="user-head">
-            <span class="user-device">${log.device}</span>
-            <span class="user-time">${timeStr}</span>
-          </div>
-          <div class="user-ip">🌐 IP: ${log.ip}</div>
-          <div class="user-ua">${log.ua}</div>
-        </div>
+  <div class="user-item">
+    <div class="user-head">
+      <span class="user-device">${log.device}</span>
+      <span class="user-time">${timeStr}</span>
+    </div>
+    <div class="user-ip">🌐 IP: ${log.ip}</div>
+    <div class="user-ua">${log.ua}</div>
+    <div style="font-size:10px;color:#8b5cff;font-weight:700;margin-top:4px;">👁️ ${log.visits || 1}x kunjungan</div>
+  </div>
       `;
     });
 
