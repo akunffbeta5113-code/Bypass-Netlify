@@ -441,24 +441,6 @@ button:active { transform: scale(.98); }
   </div>
 
   <!-- ========================================== -->
-<!-- TAB: INFO -->
-<!-- ========================================== -->
-<div class="tab-content" id="tab-info">
-  <h2 style="font-size:16px;color:#8d91a2;margin-bottom:14px;">ℹ️ INFO APLIKASI</h2>
-
-  <label>Judul Info</label>
-  <input id="infoTitle" type="text" placeholder="Tentang Aplikasi" style="margin-bottom:12px;">
-
-  <label>Isi Info</label>
-  <textarea id="infoContent" placeholder="Tulis info aplikasi di sini..." rows="6" style="width:100%;padding:12px;background:#1b1e2a;border:1px solid #303444;border-radius:12px;color:#fff;font-size:13px;margin-bottom:12px;outline:none;resize:vertical;font-family:inherit;"></textarea>
-
-  <label>Kontak / Info Tambahan</label>
-  <input id="infoContact" type="text" placeholder="WhatsApp: 628xxx | Telegram: @xxx" style="margin-bottom:12px;">
-
-  <button class="btn-apply" onclick="simpanInfo()" style="background:linear-gradient(135deg,#00c896,#00a07a);">💾 SIMPAN INFO</button>
-</div>
-
-  <!-- ========================================== -->
 <!-- TAB: USER TERAKHIR -->
 <!-- ========================================== -->
 <div class="tab-content" id="tab-users">
@@ -519,10 +501,6 @@ button:active { transform: scale(.98); }
   <button class="nav-item" data-tab="contact" onclick="switchTab('contact', this)">
     <div class="nav-icon">📞</div>
     <div class="nav-label">Kontak</div>
-  </button>
-  <button class="nav-item" data-tab="info" onclick="switchTab('info', this)">
-  <div class="nav-icon">ℹ️</div>
-  <div class="nav-label">Info</div>
   </button>
   <button class="nav-item" data-tab="users" onclick="switchTab('users', this)">
   <div class="nav-icon">👥</div>
@@ -991,7 +969,7 @@ async function loadHealth() {
     }
 
     const SERVERS = [
-      { id: 'vercel', name: '🟣 Vercel (API)' },
+      { id: 'vercel', name: '🟣 Netliy (BACKEND)' },
       { id: 'upstash', name: '🔵 Upstash KV' },
       { id: 'theresav', name: '🟢 Theresav API' }
     ];
@@ -1128,17 +1106,6 @@ async function simpanInfo() {
     showStatus('❌ Error: ' + err.message, 'error');
   }
 }
-
-async function loadInfoAdmin() {
-  try {
-    const res = await fetch('/api/info', { cache: 'no-store' });
-    const data = await res.json();
-    if (data.title) $('infoTitle').value = data.title;
-    if (data.content) $('infoContent').value = data.content;
-    if (data.contact) $('infoContact').value = data.contact;
-  } catch (e) {}
-}
-loadInfoAdmin();
 
 // ==========================================
 // EMERGENCY (PANIC)
