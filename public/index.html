@@ -605,14 +605,14 @@ let isAdminMode = false;
 async function cekMaintenance() {
   const overlay = $('maintenanceOverlay');
   const app = document.querySelector('.app');
-  if (!overlay) return;
+  if (!overlay) return false;
 
   // Admin mode → skip maintenance
   if (isAdminMode) {
     overlay.classList.remove('show');
     document.body.style.overflow = '';
     if (app) app.style.pointerEvents = '';
-    return;
+    return false;
   }
 
   try {
@@ -623,18 +623,21 @@ async function cekMaintenance() {
       overlay.classList.add('show');
       document.body.style.overflow = 'hidden';
       if (app) app.style.pointerEvents = 'none';
+      return true;   // ← maintenance ON
     } else {
       overlay.classList.remove('show');
       document.body.style.overflow = '';
       if (app) app.style.pointerEvents = '';
+      return false;  // ← maintenance OFF
     }
   } catch (err) {
     // Kalau gagal fetch → JANGAN tampilkan maintenance
     overlay.classList.remove('show');
     document.body.style.overflow = '';
     if (app) app.style.pointerEvents = '';
+    return false;  // ← error dianggap OFF
   }
-}
+                                           }
 
 // ==========================================
 // BROADCAST CHECK
@@ -1041,17 +1044,20 @@ function updateDateTime() {
 // INIT
 // ==========================================
 async function init() {
-  // Cek maintenance dulu
-  await cekMaintenance();
+  // Cek maintenance dulu — simpan hasilnya
+  const maintenanceOn = await cekMaintenance();
   // Sembunyikan blocking overlay
   hideBlocking();
   // Cek broadcast & service
   cekBroadcast();
   loadServiceStatus();
-  // Cek welcome & kontak
-  cekWelcome();
-  cekContak();
+  // Cek kontak (selalu)
+  cekKontak();
+  // Welcome hanya muncul kalau maintenance OFF
+  if (!maintenanceOn) {
+    cekWelcome();
   }
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
@@ -1060,7 +1066,23 @@ if (document.readyState === 'loading') {
 }
 
 // Interval
-setInterval(cekMaintenance, 15000);
+setInterval(async () => {
+  const maintenanceOn = await cekMaintenance();
+  
+  // Kalau maintenance baru OFF, tampilkan welcome
+  if (!maintenanceOn) {
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    // Hanya tampilkan welcome kalau belum pernah muncul di sesi ini
+    if (welcomeOverlay && !welcomeOverlay.classList.contains('show') && !welcomeOverlay.classList.contains('shown')) {
+      cekWelcome();
+      welcomeOverlay.classList.add('shown');
+    }
+  } else {
+    // Kalau maintenance ON, sembunyikan welcome
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    if (welcomeOverlay) welcomeOverlay.classList.remove('show');
+  }
+}, 15000);
 setInterval(cekBroadcast, 30000);
 setInterval(loadServiceStatus, 30000);
 
@@ -1296,23 +1318,24 @@ const WELCOME_API = (location.hostname === 'localhost' || location.hostname === 
   : '/api/welcome';
 
 async function cekWelcome() {
+  // Jangan tampilkan welcome kalau maintenance ON
+  const overlay = document.getElementById('maintenanceOverlay');
+  if (overlay && overlay.classList.contains('show')) return;
+
   try {
     const res = await fetch(WELCOME_API, { cache: 'no-store' });
     const data = await res.json();
-
     if (!data.active || !data.message) return;
 
-    document.getElementById('welcomeText').textContent = data.message;
-
-    const tiktokBtn = document.getElementById('welcomeTiktokBtn');
+    $('welcomeText').textContent = data.message;
+    const tiktokBtn = $('welcomeTiktokBtn');
     if (data.tiktok_url) {
       tiktokBtn.href = data.tiktok_url;
       tiktokBtn.style.display = 'inline-flex';
     } else {
       tiktokBtn.style.display = 'none';
     }
-
-    document.getElementById('welcomeOverlay').classList.add('show');
+    $('welcomeOverlay').classList.add('show');
   } catch (err) {}
 }
 
