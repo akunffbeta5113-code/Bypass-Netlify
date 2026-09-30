@@ -1,5 +1,5 @@
 // netlify/functions/users.mjs
-// Log user terakhir yang masuk
+// Log user terakhir yang masuk — kalau IP sama, update waktu saja
 
 import { Redis } from '@upstash/redis';
 
@@ -31,15 +31,51 @@ export default async (req) => {
               || req.headers.get('x-real-ip')
               || 'unknown';
 
-      const userData = {
-        time: new Date().toISOString(),
-        ip: ip,
-        device: device,
-        ua: ua.substring(0, 200)
-      };
+      // ==========================================
+      // Ambil semua log yang ada
+      // ==========================================
+      const rawLogs = await redis.lrange('user_logs', 0, -1) || [];
+      let logs = [];
+      for (const raw of rawLogs) {
+        try {
+          logs.push(typeof raw === 'string' ? JSON.parse(raw) : raw);
+        } catch (e) {}
+      }
 
-      await redis.lpush('user_logs', JSON.stringify(userData));
-      await redis.ltrim('user_logs', 0, 49);  // max 50
+      // ==========================================
+      // Cek apakah IP sudah ada
+      // ==========================================
+      const existingIdx = logs.findIndex(l => l.ip === ip);
+
+      if (existingIdx !== -1) {
+        // IP sudah ada → update waktu + device
+        logs[existingIdx].time = new Date().toISOString();
+        logs[existingIdx].device = device;
+        logs[existingIdx].ua = ua.substring(0, 200);
+        logs[existingIdx].visits = (logs[existingIdx].visits || 1) + 1;
+      } else {
+        // IP baru → tambah di paling atas
+        logs.unshift({
+          time: new Date().toISOString(),
+          ip: ip,
+          device: device,
+          ua: ua.substring(0, 200),
+          visits: 1
+        });
+      }
+
+      // Batasi max 50
+      logs = logs.slice(0, 50);
+
+      // ==========================================
+      // Simpan kembali — hapus list lama, tulis ulang
+      // ==========================================
+      await redis.del('user_logs');
+      if (logs.length > 0) {
+        // lpush pakai array (bulk)
+        await redis.lpush('user_logs', ...logs.map(l => JSON.stringify(l)));
+        await redis.ltrim('user_logs', 0, 49);
+      }
 
       return new Response(JSON.stringify({ success: true }), { status: 200, headers });
     } catch (e) {
@@ -63,7 +99,6 @@ export default async (req) => {
       } catch (e) {}
     }
 
-    // Hitung unique IP
     const uniqueIPs = new Set(logs.map(l => l.ip));
     const uniqueDevices = new Set(logs.map(l => l.device));
 
