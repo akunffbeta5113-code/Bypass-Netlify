@@ -1133,10 +1133,40 @@ if (document.readyState === 'loading') {
 setInterval(cekMaintenance, 15000);
 setInterval(cekBroadcast, 30000);
 setInterval(loadServiceStatus, 30000);
-setInterval(() => {
-  const n = 140 + Math.floor(Math.random() * 9);
-  $("live").textContent = n;
-}, 5000);
+// ==========================================
+// LIVE USER — REAL TIME
+// ==========================================
+const LIVE_API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.io'))
+  ? 'https://bypass-proxy.vercel.app/api/live'
+  : '/api/live';
+
+// Session unik per tab
+const SESSION_ID = 's_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+
+async function pingLive() {
+  try {
+    await fetch(LIVE_API + '?action=ping&session=' + encodeURIComponent(SESSION_ID), { cache: 'no-store' });
+  } catch (e) {}
+}
+
+async function updateLiveCount() {
+  try {
+    const res = await fetch(LIVE_API, { cache: 'no-store' });
+    const data = await res.json();
+    const liveEl = $("live");
+    if (liveEl && data.live !== undefined) {
+      liveEl.textContent = data.live;
+    }
+  } catch (e) {}
+}
+
+// Ping pertama + interval 30 detik
+pingLive();
+setInterval(pingLive, 30000);
+
+// Update angka live tiap 15 detik
+updateLiveCount();
+setInterval(updateLiveCount, 15000);
 
 updateDateTime();
 setInterval(updateDateTime, 1000);
