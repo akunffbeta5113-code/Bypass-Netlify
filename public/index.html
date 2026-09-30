@@ -1154,27 +1154,27 @@ function finishProgress(success, text) {
   const percent = $('progressPercent');
   const status = $('progressStatus');
 
-  // Pastikan dulu tampil 99%
+  // Pastikan tampil 99%
   if (fill) fill.style.width = '99%';
   if (percent) percent.textContent = '99%';
   if (status) status.textContent = 'Menyelesaikan...';
 
-  // Tunda 500ms di 99%, baru 100%
+  // Tunggu 300ms di 99% → baru 100% + hasil muncul + progress hilang
   setTimeout(() => {
     if (fill) fill.style.width = '100%';
     if (percent) percent.textContent = '100%';
     if (status) status.textContent = text || (success ? '✅ Berhasil!' : '❌ Gagal');
 
+    // Tampilkan hasil
     if (success) {
       const resultEl = document.getElementById('result');
       if (resultEl) resultEl.style.display = 'block';
     }
 
-    setTimeout(() => {
-      const container = $('progressContainer');
-      if (container) container.classList.remove('show');
-    }, 1500);
-  }, 500);
+    // Progress bar langsung hilang bersamaan dengan hasil muncul
+    const container = $('progressContainer');
+    if (container) container.classList.remove('show');
+  }, 300);
 }
   
   // ==========================================
