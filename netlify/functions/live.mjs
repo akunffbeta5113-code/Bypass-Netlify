@@ -19,11 +19,18 @@ export default async (req) => {
 
   let liveCount = 1;
   try {
-    const sessions = await kv.hgetall('live_sessions') || {};
-    let active = 0;
-    for (const key in sessions) {
-      if (now - parseInt(sessions[key]) < timeout) active++;
-    }
+    const expired = [];
+for (const key in sessions) {
+  if (now - parseInt(sessions[key]) < timeout) {
+    active++;
+  } else {
+    expired.push(key);  // ← kumpulkan yang expired
+  }
+}
+// Hapus session expired
+for (const key of expired) {
+  await redis.hdel('live_sessions', key);  // ← BERSIHKAN
+}
     liveCount = Math.max(active, 1);
   } catch (e) {}
 
