@@ -959,7 +959,6 @@ startProgress();
       : (json.time_taken || (elapsed + " ms"));
 
     resultLink = bypassed;
-    $("result").style.display = "block";
     finishProgress(true, '✅ Bypass berhasil!');
     toast("Bypass berhasil");
   } catch(err) {
@@ -1109,7 +1108,9 @@ setInterval(updateDateTime, 1000);
 // ==========================================
 // PROGRESS BAR
 // ==========================================
-let progressInterval = null;
+  let progressInterval = null;
+let progressStartTime = 0;
+const PROGRESS_DURATION = 4000;  // 4 detik sampai 99%
 
 function startProgress() {
   const container = $('progressContainer');
@@ -1119,40 +1120,32 @@ function startProgress() {
   if (!container) return;
 
   container.classList.add('show');
-  let p = 0;
+  progressStartTime = Date.now();
   fill.style.width = '0%';
   percent.textContent = '0%';
   status.textContent = 'Mengirim request...';
 
   clearInterval(progressInterval);
   progressInterval = setInterval(() => {
-    if (p < 30) {
-      p += 3;
+    const elapsed = Date.now() - progressStartTime;
+    let p = (elapsed / PROGRESS_DURATION) * 99;  // max 99%
+
+    if (p >= 99) {
+      p = 99;
+      status.textContent = 'Menyelesaikan...';
+    } else if (p < 30) {
       status.textContent = 'Mengirim request...';
     } else if (p < 60) {
-      p += 2;
       status.textContent = 'Memproses link...';
     } else if (p < 90) {
-      p += 1;
       status.textContent = 'Menunggu response...';
-    } else if (p < 99) {
-      p += 1;
-      status.textContent = 'Hampir selesai...';
     } else {
-      return;
+      status.textContent = 'Hampir selesai...';
     }
+
     fill.style.width = p + '%';
     percent.textContent = Math.floor(p) + '%';
-  }, 100);
-}
-
-function updateProgress(p, text) {
-  const fill = $('progressFill');
-  const percent = $('progressPercent');
-  const status = $('progressStatus');
-  if (fill) fill.style.width = p + '%';
-  if (percent) percent.textContent = Math.floor(p) + '%';
-  if (status && text) status.textContent = text;
+  }, 50);  // update tiap 50ms — lebih halus
 }
 
 function finishProgress(success, text) {
@@ -1161,15 +1154,28 @@ function finishProgress(success, text) {
   const percent = $('progressPercent');
   const status = $('progressStatus');
 
-  if (fill) fill.style.width = '100%';
-  if (percent) percent.textContent = '100%';
-  if (status) status.textContent = text || (success ? '✅ Berhasil!' : '❌ Gagal');
+  // Pastikan dulu tampil 99%
+  if (fill) fill.style.width = '99%';
+  if (percent) percent.textContent = '99%';
+  if (status) status.textContent = 'Menyelesaikan...';
 
+  // Tunda 500ms di 99%, baru 100%
   setTimeout(() => {
-    const container = $('progressContainer');
-    if (container) container.classList.remove('show');
-  }, 1200);
-  }
+    if (fill) fill.style.width = '100%';
+    if (percent) percent.textContent = '100%';
+    if (status) status.textContent = text || (success ? '✅ Berhasil!' : '❌ Gagal');
+
+    if (success) {
+      const resultEl = document.getElementById('result');
+      if (resultEl) resultEl.style.display = 'block';
+    }
+
+    setTimeout(() => {
+      const container = $('progressContainer');
+      if (container) container.classList.remove('show');
+    }, 1500);
+  }, 500);
+}
   
   // ==========================================
 // KONTAK ADMIN — Ambil dari API
@@ -1193,14 +1199,14 @@ async function cekKontak() {
     tg = data.telegram || '';
   } catch (err) {
     // fallback kalau API gagal
-    wa = '6285818739766';
-    tg = 'makak';
+    wa = '6285813439956';
+    tg = 'secretdevelop';
   }
 
   // Fallback kalau API kosong
   if (!wa && !tg) {
     wa = '6285813439956';
-    tg = 'makak';
+    tg = 'secretdevelop';
   }
 
   let html = '';
