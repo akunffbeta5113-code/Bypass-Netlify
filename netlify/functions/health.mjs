@@ -33,7 +33,7 @@ async function cekSemuaServer() {
       results.theresav.status = data.status === true ? 'online' : 'warning';
       results.theresav.message = data.status === true ? 'Theresav berjalan normal' : 'Respons tidak valid';
     } else {
-      results.theresav.status = 'warning';
+      results.theresav.status = 'offline';
       results.theresav.message = 'HTTP ' + response.status;
     }
     results.theresav.time = elapsed;
